@@ -26,20 +26,20 @@ module bullet (clk, load, shooting, reset, firing, direction_x, direction_y,
 					//TODO: we need to figure out how to make the bullets disappear/end/terminate/kill itself/SIGINT/SIGKILL/-9 			
 
 				end
-				else if(shooting)
+				else if(shooting && !collision)
 					firing <= 1'b1;
 			end
 		end
 	//TODO make this work for multiple directions/rotation/8 directions 
 	always @(posedge clk)
 		begin: timer_count
+			curr_direct_x <= direction_x;
+			curr_direct_y <= direction_y;	
 			if(load) begin
 				time_counter <= 24'd10;
 				curr_x <= start_x;
 				curr_y <= start_y;
-				plot_bullet <= 1'b0;
-				curr_direct_x <= direction_x;
-				curr_direct_y <= direction_y;					
+				plot_bullet <= 1'b0;				
 			end
 			else begin
 				time_counter <= time_counter == 24'd0 ? 24'd10 : time_counter - 1;

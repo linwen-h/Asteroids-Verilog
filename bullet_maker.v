@@ -7,9 +7,7 @@ module bullet_maker(clk, pressed, reset, direct_x, direct_y, ship_x, ship_y);
     reg [0:0]clk_array, reset_array, shooting, firing, collision, plot_bullet, load [num_bullets - 1:0];
     reg [1:0] direction_x, direction_y [num_bullets - 1:0];
     reg [7:0] start_x, curr_x [num_bullets - 1:0];
- 
     reg [6:0] start_y, curr_y [num_bullets - 1:0];
-    reg [6:0] curr_y [num_bullets - 1:0];
 
     integer i, k;
     initial begin
@@ -52,26 +50,22 @@ module bullet_maker(clk, pressed, reset, direct_x, direct_y, ship_x, ship_y);
             if (reset) begin
                 count <= 8'b0;
 
-            for(k = 0; k < num_bullets; k = k + 1)
-    	        clk_array[i] <= clk;
-    	        shooting[i] <= 1'b0;
-    	        load[i] <= 1'b0;
-    	        reset_array[i] <= 1'b1;
-    	        collision[i] <= 1'b0;
-    	        start_x[i] <= 8'd0;
-    	        start_y[i] <= 7'd0;
-    	        direction_x[i] <= 2'b00;
-    	        direction_y[i] <= 2'b00;
-    	     end 
-
-		
-            end
+                for(k = 0; k < num_bullets; k = k + 1)
+    	            clk_array[i] <= clk;
+    	            shooting[i] <= 1'b0;
+    	            load[i] <= 1'b0;
+    	            reset_array[i] <= 1'b1;
+    	            collision[i] <= 1'b0;
+    	            start_x[i] <= 8'd0;
+    	            start_y[i] <= 7'd0;
+    	            direction_x[i] <= 2'b00;
+    	            direction_y[i] <= 2'b00;
+            end 
             else begin 
                 if(count == num_bullets - 1) begin
                     count = 7'd0;
                     reset_array[0] = 1'b1;
                 end
-
                 if (pressed) begin
                     direction_x[count] <= direct_x;
                     direction_y[count] <= direct_y;
@@ -79,12 +73,13 @@ module bullet_maker(clk, pressed, reset, direct_x, direct_y, ship_x, ship_y);
                     start_y[count] <= ship_y;
                     reset_array[count] <= 1'b1;
                     shooting[count] <= 1'b1;
-					load[count] <= 1'b1;
+		    load[count] <= 1'b1;
                     count <= count + 1'b1;
-				    if (count > 0) begin
-						load[count-1] <= 1'b0;
+		    if (count > 0) begin
+		        load[count-1] <= 1'b0;
+			shooting[count - 1] <= 1'b0;
                     end
-				end
+	        end
             end
         end
 endmodule
