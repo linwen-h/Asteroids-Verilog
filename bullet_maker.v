@@ -4,17 +4,11 @@ module bullet_maker(clk, pressed, reset, direct_x, direct_y, ship_x, ship_y);
     localparam num_bullets = 8'd160;
     reg [7:0] count = 8'd0;
 
-    reg clk_array [num_bullets - 1:0];
-    reg reset_array [num_bullets - 1:0];
-	reg shooting [num_bullets - 1:0];
-	reg firing [num_bullets - 1:0];
-	reg collision [num_bullets - 1:0];
-	reg plot_bullet [num_bullets - 1:0];
-	reg load [num_bullets - 1:0];
+    reg [0:0]clk_array, reset_array, shooting, firing, collision, plot_bullet, load [num_bullets - 1:0];
     reg [1:0] direction_x, direction_y [num_bullets - 1:0];
-    reg [7:0] start_x [num_bullets - 1:0];
-    reg [7:0] curr_x [num_bullets - 1:0];
-    reg [6:0] start_y[num_bullets - 1:0];
+    reg [7:0] start_x, curr_x [num_bullets - 1:0];
+ 
+    reg [6:0] start_y, curr_y [num_bullets - 1:0];
     reg [6:0] curr_y [num_bullets - 1:0];
 
     integer i;
@@ -22,7 +16,7 @@ module bullet_maker(clk, pressed, reset, direct_x, direct_y, ship_x, ship_y);
         for(i = 0; i < num_bullets; i = i + 1)
             clk_array[i] <= clk;
             shooting[i] <= 1'b0;
-		    load[i] <= 1'b0;
+            load[i] <= 1'b0;
             reset_array[i] <= 1'b1;
             collision[i] <= 1'b0;
             start_x[i] <= 8'd0;
@@ -52,22 +46,6 @@ module bullet_maker(clk, pressed, reset, direct_x, direct_y, ship_x, ship_y);
 			);
 		end
 	endgenerate
-
-    //bullet bullet_array[num_bullets - 1:0] (.clk(clk_array),
-      //                      .reset(reset_array),
-        //                    .firing(firing),
-          //                  .shooting(shooting),
-		//	    .load(load),
-                  //          .direction_x(direction_x),
-                    //        .direction_y(direction_y),
-                      //      .start_x(start_x),
-                       //     .start_y(start_y),
-                         //   .collision(collision),
-                          //  .curr_x(curr_x),
-                           // .curr_y(curr_y),
-                            //.plot_bullet(plot_bullet));
-
-    //outputs: curr_x, curr_y, plot_bullet, firing
 
     always @ (posedge clk)
         begin: make_new_bullets
