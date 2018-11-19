@@ -148,7 +148,7 @@ module keyboard_tracker_modified #(parameter PULSE_OR_HOLD = 0) (
 				// state according to special bytes.
 				case (newest_byte)
 				    // TODO: ADD TO HERE WHEN IMPLEMENTING NEW KEYS
-		          W_CODE: w_press <= curr_state == MAKE;
+		         		 W_CODE: w_press <= curr_state == MAKE;
 					 A_CODE: a_press <= curr_state == MAKE;
 					 S_CODE: s_press <= curr_state == MAKE;
 					 D_CODE: d_press <= curr_state == MAKE;

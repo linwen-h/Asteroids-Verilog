@@ -42,8 +42,7 @@ always @ (posedge clk)
 			time_counter <= time_counter == 24'd0 ? 24'd10 : time_counter - 1;				
 			if(time_counter == 24'd0 && move_flag && !collision) begin
 				plot_ship <= 1'b1;
-				
-
+			
 				case (direction_x)
 					2'b00: curr_x <= curr_x;
 					2'b01: curr_x <= curr_x + 1;
