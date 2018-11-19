@@ -11,7 +11,7 @@
  * http://www.eecg.toronto.edu/~jayar/ece241_08F/AudioVideoCores/ps2/ps2.html
  *
  */
-module keyboard_tracker_modified #(parameter PULSE_OR_HOLD = 1) (
+module keyboard_tracker_modified #(parameter PULSE_OR_HOLD = 0) (
     input clock,
 	 input reset,
 	 

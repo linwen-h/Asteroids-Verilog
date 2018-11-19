@@ -114,7 +114,7 @@
  * http://www.eecg.toronto.edu/~jayar/ece241_08F/AudioVideoCores/ps2/ps2.html
  *
  */
-module keyboard_tracker #(parameter PULSE_OR_HOLD = 0) (
+module keyboard_tracker #(parameter PULSE_OR_HOLD = 1) (
     input clock,
 	 input reset,
 	 
@@ -183,7 +183,7 @@ module keyboard_tracker #(parameter PULSE_OR_HOLD = 0) (
     assign up    = up_press && ~(up_lock && PULSE_OR_HOLD);
     assign down  = down_press && ~(down_lock && PULSE_OR_HOLD);
 
-    assign space = space_press && ~(space_lock && PULSE_OR_HOLD);
+    assign space = space_press && ~(space_lock && PULSE_OR_HOLD); //TODO: Linwen: changed this 
     assign enter = enter_press && ~(enter_lock && PULSE_OR_HOLD);
 	 
 	 // Core PS/2 driver.
@@ -327,7 +327,7 @@ endmodule
  */
 
 /**
- * Tester module for mode 0 (hold) mode. LED's on the board should turn on whenever
+ * Tester module for mode 0 (hold) mo  de. LED's on the board should turn on whenever
  * the corresponding key is pressed, and turn off when the key is released.
  */ 
 module keyboard_interface_test_mode0(

@@ -1,19 +1,22 @@
 module keyboard(
 	input clk,
 	input reset,
+	input controller_type // 1 = wasd, 0 = arrow key
 	inout PS2_CLK,
 	inout PS2_DAT,
 	
 	//TODO: output 
-	output shoot,
-	output foward,
-	output backward,
-	output rotate_right,
-	output rotate_left,
+	output reg shoot,
+	output reg foward,
+	output  reg backward,
+	output reg rotate_right,
+	output reg rotate_left,
 	);
 
+	
+
 	 // Wires representing direct output from the keyboard controller.
-	 wire w_pulse,
+	wire w_pulse,
 	      a_pulse,
 	      s_pulse,
 	      d_pulse,
@@ -24,30 +27,13 @@ module keyboard(
 	      space_pulse,
 	      enter_pulse;
 
-    // Registers holding the values displayed on the LEDs.
-    	reg  w_tot,
-	     a_tot,
-	     s_tot,
-	     d_tot,
-	     left_tot,
-	     right_tot,
-	     up_tot,
-	     down_tot,
-	     space_tot,
-	     enter_tot;
-
 	//TODO: allow user to pick if they can use WASD or Arrow Keys
-	assign shoot = space_tot;
-	assign forward = w_tot;
-	assign backward = s_tot;
-	assign rotate_right = d_tot;
-	assign rotate_left = a_tot;
 
 			
 	//TODO: update the keyboard_controller code so that 
 
-	 keyboard_tracker #(.PULSE_OR_HOLD(1)) k0(
-	     .clock(clk),
+	 keyboard_tracker_modified #(.PULSE_OR_HOLD(0)) k0(
+	     	  .clock(clk),
 		  .reset(reset),
 		  .PS2_CLK(PS2_CLK),
 		  .PS2_DAT(PS2_DAT),
@@ -67,25 +53,27 @@ module keyboard(
 		begin
 			if (reset) begin
       			        // Reset signal
-				w_tot <= 1'b0;
-				a_tot <= 1'b0;
-				s_tot <= 1'b0;
-				d_tot <= 1'b0;
-				
-				left_tot  <= 1'b0;
-				right_tot <= 1'b0;
-				up_tot    <= 1'b0;
-				down_tot  <= 1'b0;
-				
-				space_tot <= 1'b0;
-				enter_tot <= 1'b0;
-			
+				shoot <= 1'b0;
+				forward <= 1'b0;
+				backward <= 1'b0;
+				left_rotate <= 1'b0;
+				right_rotate  <= 1'b0;
 			end
 			else begin
-			//TODO: figure out how we want to set this up
-
+				shoot <= space_pulse;
+				if (controller_type) begin
+					forward <= w_pulse;
+					backward <= s_pulse;
+					right_rotate <= d_pulse;
+					left_rotate <= a_pulse;
+				end
+				else begin
+					foward <= up_pulse;
+					backward <= down_pulse;
+					right_rotate <= right_pulse;
+					left_rotate <= left_pulse;
+				end
 			end
-		
 		end
 endmodule
 
