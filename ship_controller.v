@@ -17,7 +17,7 @@ module ship_controller (
 	hex_seg(HEX0, curr_x[3:0]);
 	hex_seg(HEX1, curr_x[7:4]);
 	hex_seg(HEX3, cury_y[3:0]);
-	hex_seg(HEX4, {1'b0, curr_y[6:4]);
+	hex_seg(HEX4, {1'b0, curr_y[6:4]});
 	
 
 	wire shoot, rotate_right, rotate_left, plot_ship;

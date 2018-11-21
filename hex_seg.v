@@ -1,5 +1,5 @@
 module hex_seg(display, score);
-	input [9:0] score;
+	input [4:0] score;
 	output [6:0] display;
 
 	decoder d(

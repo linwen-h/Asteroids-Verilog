@@ -1,0 +1,3 @@
+module asteroid();
+
+endmodule
