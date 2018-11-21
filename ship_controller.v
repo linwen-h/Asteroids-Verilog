@@ -2,7 +2,23 @@ module ship_controller (
 	inout PS2_CLK,
 	inout PS2_DAT,
 	input clk,
-	input [1:0] lives);
+	input [1:0] lives,
+	
+	output [9:0] LEDR, //[7:4] direction, [3:0] past_direction
+	output [6:0] HEX0, //curr_x [3:0]
+	output [6:0] HEX1, //curr_x [7:4]
+	output [6:0] HEX3, //curr_y [3:0]
+	output [6:0] HEX4  //curr_y [0] + [6:4]
+	);
+
+	assign LEDR [8:5] = direction;
+	assign [3:0] = past_direction;
+	
+	hex_seg(HEX0, curr_x[3:0]);
+	hex_seg(HEX1, curr_x[7:4]);
+	hex_seg(HEX3, cury_y[3:0]);
+	hex_seg(HEX4, {1'b0, curr_y[6:4]);
+	
 
 	wire shoot, rotate_right, rotate_left, plot_ship;
 	reg [3:0] direction;
@@ -15,17 +31,17 @@ module ship_controller (
 	reg move;
 	
 
-	//keyboard k0(
-		//.clk(clk),
-		//.reset(reset),
-		//.controller_type(ct),
-		//.PS2_CLK(PS2_CLK),
-		//.PS2_DAT(PS2_CLK),
-		//.shoot(shooting),
-		//.forward(move),
-		//.rotate_right(rotate_right),
-		//.rotate_left(rotate_left)
-		//);
+	keyboard k0(
+		.clk(clk),
+		.reset(reset),
+		.controller_type(ct),
+		.PS2_CLK(PS2_CLK),
+		.PS2_DAT(PS2_DAT),
+		.shoot(shooting),
+		.forward(move),
+		.rotate_right(rotate_right),
+		.rotate_left(rotate_left)
+		);
 
 	spaceship ship(
 		.clk(clk), 
@@ -46,13 +62,13 @@ module ship_controller (
 	always @ (posedge clk)
 		begin
 			if (reset) begin
-				counter <= 24'd10; //TODO: change this time
+				counter <= 24'd12500000; //TODO: change this time (1/4 second)
 				move <= 1'b0;
 				direction <= 4'b0001;
 					
 			end
 			else begin
-				counter <= counter == 24'b0 ? 24'd10: counter - 1;
+				counter <= counter == 24'b0 ? 24'd12500000: counter - 1;
 				if (counter == 24'd0) begin
 					shooting <= 1'b0; //TODO
 					if (rotate_right && rotate_left) begin
