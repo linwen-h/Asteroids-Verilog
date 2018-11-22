@@ -1,5 +1,7 @@
 module keyboard(
 	input clk,
+	//input CLOCK_50,
+	//input [1:0]SW, //reset - testing
 	input reset,
 	input controller_type, // 1 = wasd, 0 = arrow key
 	inout PS2_CLK,
@@ -11,8 +13,15 @@ module keyboard(
 	output reg backward,
 	output reg right_rotate,
 	output reg left_rotate
+	//output [9:0] LEDR
 	);
-
+	
+	//wire controller_type;
+	//assign controller_type = SW[1];
+	
+	
+	//wire clk;
+	//assign clk = CLOCK_50;
 	
 
 	 // Wires representing direct output from the keyboard controller.
@@ -32,9 +41,20 @@ module keyboard(
 			
 	//TODO: update the keyboard_controller code so that 
 
-	 keyboard_tracker_modified #(.PULSE_OR_HOLD(0)) k0(
+	//assignments for testing the controls without the VGA set up
+//	assign LEDR[0] = forward;
+//	assign LEDR[1] = backward;
+//	assign LEDR[2] = right_rotate;
+//	assign LEDR[3] = left_rotate;
+//	assign reset = SW[0];
+//	assign LEDR[4] = shoot;
+	
+	//wire reset;
+	
+
+	 keyboard_tracker #(.PULSE_OR_HOLD(0)) k0(
 	     	  .clock(clk),
-		  .reset(reset),
+		  .reset(~reset),
 		  .PS2_CLK(PS2_CLK),
 		  .PS2_DAT(PS2_DAT),
 		  .w(w_pulse),

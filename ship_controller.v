@@ -1,8 +1,8 @@
 module ship_controller (
 	inout PS2_CLK,
 	inout PS2_DAT,
-	input clk,
-	input [1:0] lives,
+	input CLOCK_50,
+	input [2:0] SW, //lives = SW[2:1] reset = SW[0]
 	
 	output [9:0] LEDR, //[7:4] direction, [3:0] past_direction
 	output [6:0] HEX0, //curr_x [3:0]
@@ -10,13 +10,20 @@ module ship_controller (
 	output [6:0] HEX3, //curr_y [3:0]
 	output [6:0] HEX4  //curr_y [0] + [6:4]
 	);
+	
+	wire clk;
+	assign clk = CLOCK_50;
+	wire lives;
+	assign lives = SW[2:1];
+	
 
 	assign LEDR [8:5] = direction;
-	assign [3:0] = past_direction;
+	assign LEDR [3:0] = past_direction;
+	assign LEDR[9] = shoot;
 	
 	hex_seg(HEX0, curr_x[3:0]);
 	hex_seg(HEX1, curr_x[7:4]);
-	hex_seg(HEX3, cury_y[3:0]);
+	hex_seg(HEX3, curr_y[3:0]);
 	hex_seg(HEX4, {1'b0, curr_y[6:4]});
 	
 
@@ -28,19 +35,21 @@ module ship_controller (
 	wire [1:0] curr_lives;
 	reg [0:0] shooting;
 	reg [3:0] past_direction;
-	reg move;
+	wire move;
 	
+	wire reset;
+	assign reset = SW[0];
 
 	keyboard k0(
 		.clk(clk),
 		.reset(reset),
-		.controller_type(ct),
+		.controller_type(1'b1),
 		.PS2_CLK(PS2_CLK),
 		.PS2_DAT(PS2_DAT),
-		.shoot(shooting),
+		.shoot(shoot),
 		.forward(move),
-		.rotate_right(rotate_right),
-		.rotate_left(rotate_left)
+		.right_rotate(rotate_right),
+		.left_rotate(rotate_left)
 		);
 
 	spaceship ship(
@@ -63,7 +72,7 @@ module ship_controller (
 		begin
 			if (reset) begin
 				counter <= 24'd12500000; //TODO: change this time (1/4 second)
-				move <= 1'b0;
+				//move <= 1'b0;
 				direction <= 4'b0001;
 					
 			end
@@ -90,20 +99,18 @@ module ship_controller (
 					else if (rotate_left) begin
 						case (past_direction)
 							4'b0001: direction <= 4'b1001;
-							4'b0101: direction <= 4'b1000;
-							4'b0100: direction <= 4'b1010;
-							4'b0110: direction <= 4'b0010;
+							4'b0101: direction <= 4'b0001;
+							4'b0100: direction <= 4'b0101;
+							4'b0110: direction <= 4'b0100;
 							4'b0010: direction <= 4'b0110;
-							4'b1010: direction <= 4'b0100;
-							4'b1000: direction <= 4'b0101;
+							4'b1010: direction <= 4'b0010;
+							4'b1000: direction <= 4'b1010;
 							4'b1001: direction <= 4'b0001;
 							default: direction <= direction;
 	 					endcase						
 					end
 				end
-				else begin
 					past_direction <= direction;		
-				end
 			end
 		end 
 endmodule
