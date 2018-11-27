@@ -12,19 +12,19 @@ module ship_controller (
 	);
 	
 	wire clk;
-	assign clk = CLOCK_50;
-	wire lives;
-	assign lives = SW[2:1];
+	//assign clk = CLOCK_50;
+	//wire lives;
+	//assign lives = SW[2:1];
 	
 
-	assign LEDR [8:5] = direction;
-	assign LEDR [3:0] = past_direction;
-	assign LEDR[9] = shoot;
+	// assign LEDR [8:5] = direction;
+	// assign LEDR [3:0] = past_direction;
+	// assign LEDR[9] = shoot;
 	
-	hex_seg(HEX0, curr_x[3:0]);
-	hex_seg(HEX1, curr_x[7:4]);
-	hex_seg(HEX3, curr_y[3:0]);
-	hex_seg(HEX4, {1'b0, curr_y[6:4]});
+	// hex_seg(HEX0, curr_x[3:0]);
+	// hex_seg(HEX1, curr_x[7:4]);
+	// hex_seg(HEX3, curr_y[3:0]);
+	// hex_seg(HEX4, {1'b0, curr_y[6:4]});
 	
 
 	wire shoot, rotate_right, rotate_left, plot_ship;
@@ -37,8 +37,8 @@ module ship_controller (
 	reg [3:0] past_direction;
 	wire move;
 	
-	wire reset;
-	assign reset = SW[0];
+	// wire reset;
+	// assign reset = SW[0];
 
 	keyboard k0(
 		.clk(clk),
@@ -71,20 +71,20 @@ module ship_controller (
 	always @ (posedge clk)
 		begin
 			if (reset) begin
-				counter <= 24'd12500000; //TODO: change this time (1/4 second)
+				//counter <= 24'd12500000; //TODO: change this time (1/4 second)
 				//move <= 1'b0;
 				direction <= 4'b0001;
 					
 			end
 			else begin
-				counter <= counter == 24'b0 ? 24'd12500000: counter - 1;
-				if (counter == 24'd0) begin
-					shooting <= 1'b0; //TODO
-					if (rotate_right && rotate_left) begin
-						direction <= direction;
-					end
-					else if (rotate_right) begin // TODO: Left and Right click at the same time
-						case (past_direction) //TODO: consider FSA
+				//counter <= counter == 24'b0 ? 24'd12500000: counter - 1;
+				//if (counter == 24'd0) begin
+				shooting <= 1'b0; //TODO
+				if (rotate_right && rotate_left) begin
+					direction <= direction;
+				end
+				else if (rotate_right) begin // TODO: Left and Right click at the same time
+					case (past_direction) //TODO: consider FSA
 							4'b0001: direction <= 4'b0101;
 							4'b0101: direction <= 4'b0100;
 							4'b0100: direction <= 4'b0110;
@@ -94,10 +94,10 @@ module ship_controller (
 							4'b1000: direction <= 4'b1001;
 							4'b1001: direction <= 4'b0001;
 							default: direction <= direction;
-	 					endcase
-					end 
-					else if (rotate_left) begin
-						case (past_direction)
+	 				endcase
+				end 
+				else if (rotate_left) begin
+					case (past_direction)
 							4'b0001: direction <= 4'b1001;
 							4'b0101: direction <= 4'b0001;
 							4'b0100: direction <= 4'b0101;
@@ -107,9 +107,9 @@ module ship_controller (
 							4'b1000: direction <= 4'b1010;
 							4'b1001: direction <= 4'b0001;
 							default: direction <= direction;
-	 					endcase						
-					end
+	 				endcase						
 				end
+				//end
 					past_direction <= direction;		
 			end
 		end 

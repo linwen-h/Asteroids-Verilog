@@ -51,9 +51,12 @@ module keyboard(
 	
 	//wire reset;
 	
+	//TODO: need to update the keyboard tracker to work for up and down keys
+	//need to add pause, and go buttons and anything else
+	//for menu and maybe the high score thing etc 
 
 	 keyboard_tracker #(.PULSE_OR_HOLD(0)) k0(
-	     	  .clock(clk),
+	      .clock(clk),
 		  .reset(~reset),
 		  .PS2_CLK(PS2_CLK),
 		  .PS2_DAT(PS2_DAT),
