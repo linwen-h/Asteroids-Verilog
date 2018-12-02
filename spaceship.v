@@ -1,5 +1,5 @@
 module spaceship(clk, reset, start_x, start_y, move_flag, starting_lives, shooting, direction, collision, curr_x, curr_y, plot_ship, curr_lives);
-
+//TODO change the coordinates to be the middle 
 input clk, reset, shooting, collision, move_flag;
 input [7:0] start_x;
 input [6:0] start_y;
@@ -30,17 +30,17 @@ reg plot_ship;
 			//.ship_y(curr_y));
 
 always @ (posedge clk)
-	begin: timer_block
+	begin
 		if (reset) begin
-			time_counter <= 24'd10; //TODO: change the time here
+			//time_counter <= 24'd10; //TODO: change the time here
 			curr_x <= start_x;
 			curr_y <= start_y;
 			curr_lives <= starting_lives;
-			plot_ship <= 0'b0;
+			plot_ship <= 1'b0;
 		end
 		else begin
-			time_counter <= time_counter == 24'd0 ? 24'd10 : time_counter - 1;				
-			if(time_counter == 24'd0 && move_flag && !collision) begin
+			//time_counter <= time_counter == 24'd0 ? 24'd10 : time_counter - 1;				
+			if(move_flag && !collision) begin
 				plot_ship <= 1'b1;
 			
 				case (direction_x)
