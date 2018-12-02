@@ -131,7 +131,7 @@ module datapath(
 	
 	always @(posedge clock) begin: colour_load
 		if (!resetn) begin
-			x <= 8'b00000000;
+			x <= 8'b00010100;
 			y <= 7'b0000000;
 			c <= colour;
 			done_draw <= 1'b0;
@@ -148,7 +148,7 @@ module datapath(
 		end
 		else if (enable && calc == 3'b000) begin
 			x_counter <= x_counter + 1;
-			if (x_counter == 8'd160) begin
+			if (x_counter == 8'd120) begin
 				y_counter <= y_counter + 1;
 				if (y_counter == 8'd120) begin
 					y_counter <= 7'd0;
@@ -171,7 +171,7 @@ module datapath(
 				done_draw <= 1'b1;
 			end
 			else if (calc == 3'b000) begin
-				x <= 8'b00000000;
+				x <= 8'b00010100;
 				y <= 7'b0000000;
 				c <= ~colour;
 				loaded <= 1'b1;
@@ -186,7 +186,7 @@ module datapath(
 			end
 			else if (calc == 3'b010) begin
 				prev_calc <= 3'b010;
-				x <= 8'd159;
+				x <= 8'd119;
 				y <= 7'd119;
 				if (draw_asteroid[asteroid_counter] == 1'b0 && asteroid_counter != 3'b111) begin
 					asteroid_counter <= asteroid_counter == 3'd7 ? 3'd0 : asteroid_counter + 3'b001;
@@ -241,7 +241,7 @@ module datapath(
 		else begin
 			if(calc == 3'b000) begin
 				c <= ~colour;
-				if (y_counter == 7'd119 && x_counter == 8'd159) begin
+				if (y_counter == 7'd119 && x_counter == 8'd119) begin
 					loaded <= 1'b0;
 					done_draw <= 1'b1;
 				end
@@ -418,13 +418,13 @@ module control(clk, resetn, enable, plot, done_draw, calc);
 						counter <= 26'd40;
 					end
 					else if(current_state == CALC_SHIP) begin
-						counter <= 26'd250;
+						counter <= 26'd225;
 					end
 					else if(current_state == CALC_ASTEROID) begin
 						counter <= 26'd833334;
 					end
 					else begin
-						counter <= 26'd19499;
+						counter <= 26'd15999;
 					end
 					go <= 1'b1;
 				end
