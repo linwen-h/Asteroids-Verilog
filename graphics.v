@@ -601,20 +601,108 @@ module datapath(
 				end
 				else if(((y_counter >= 7'd36 && y_counter <= 7'd53) || (y_counter >= 7'd77 && y_counter <= 7'd84)) && x_counter >= 8'd38 && x_counter <= 8'd123) begin
 					if(y_counter == 7'd36) begin
-						if((x_counter >= 8'd38 && x_counter <= 8'd43) || 
-						   (x_counter >= 8'd45 && x_counter <= 8'd50) || 
-						   (x_counter >= 8'd47 && x_counter <= 8'd58) || 
-						   (x_counter >= 8'd61 && x_counter <= 8'd72) || 
-						   (x_counter >= 8'd75 && x_counter <= 8'd86) || 
-						   (x_counter >= 8'd89 && x_counter <= 8'd100) || 
-						   (x_counter >= 8'd103 && x_counter <= 8'd114) || 
-						   (x_counter >= 8'd117 && x_counter <= 8'd128) || 
-						   (x_counter >= 8'd131 && x_counter <= 8'd142)) begin
-							if(y_counter == 7'd18 && (x_counter == 8'd127 || x_counter == 8'd128) || y_counter == 7'd19 && x_counter == 8'd128)
+						if((x_counter >= 8'd66 && x_counter <= 8'd71) || 
+						   (x_counter >= 8'd74 && x_counter <= 8'd79) || 
+						   (x_counter == 8'd82) || (x_counter == 8'd87) || 
+						   (x_counter >= 8'd90 && x_counter <= 8'd95))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter >= 7'd37 && y_counter <= 7'd39) begin
+						if((x_counter == 8'd66) || (x_counter == 8'd74) || (x_counter == 8'd79) || 
+						   (x_counter >= 8'd82 && x_counter <= 8'd87) || 
+						   (x_counter >= 8'd90 && x_counter <= 8'd95)) begin
+							if((y_counter == 7'd37 || y_counter == 7'd38) && 
+							   (x_counter == 8'd84 || x_counter == 8'd85 || 
+							   (x_counter >= 8'd91 && x_counter <= 8'd95)))
+								c <= ~colour;
+							else if(y_counter == 7'd39 && (x_counter == 8'd83 || x_counter == 8'd86))
 								c <= ~colour;
 							else
 								c <= colour;
 						end
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd40) begin
+						if((x_counter >= 8'd66 && x_counter <= 8'd71) || 
+						   (x_counter >= 8'd74 && x_counter <= 8'd79) ||
+						   (x_counter >= 8'd82 && x_counter <= 8'd87) || 
+						   (x_counter >= 8'd90 && x_counter <= 8'd95)) begin
+							if(x_counter == 8'd67 || x_counter == 8'd68 || x_counter == 8'd83 || x_counter == 8'd86)
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd41 || y_counter == 7'd42) begin
+						if((x_counter == 8'd66) || (x_counter == 8'd71) || (x_counter == 8'd74) || 
+						   (x_counter == 8'd79) || (x_counter == 8'd82) || (x_counter == 8'd87) ||
+						   (x_counter == 8'd90))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd43) begin
+						if((x_counter >= 8'd66 && x_counter <= 8'd71) ||
+						   (x_counter == 8'd74) || (x_counter == 8'd79) || (x_counter == 8'd82) ||
+						   (x_counter == 8'd87) || (x_counter >= 8'd90 && x_counter <= 8'd95))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd46) begin
+						if((x_counter >= 8'd66 && x_counter <= 8'd71) ||
+						   (x_counter == 8'd74) || (x_counter == 8'd79) || 
+						   (x_counter >= 8'd82 && x_counter <= 8'd87) || 
+						   (x_counter >= 8'd90 && x_counter <= 8'd94))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd47 || y_counter == 7'd48) begin
+						if((x_counter == 8'd66) || (x_counter == 8'd71) || (x_counter == 8'd74) || 
+						   (x_counter == 8'd79) || (x_counter == 8'd82) || (x_counter == 8'd90) ||
+						   (x_counter == 8'd95))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd49 || y_counter == 7'd50) begin
+						if((x_counter == 8'd66) || (x_counter == 8'd71) || (x_counter == 8'd75) || 
+						   (x_counter == 8'd78) || (x_counter >= 8'd82 && x_counter <= 8'd87) ||
+						   (x_counter >= 8'd90 && x_counter <= 8'd95)) begin
+							if(y_counter == 7'd50 && x_counter == 8'd95)
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd51 || y_counter == 7'd52) begin
+						if((x_counter == 8'd66) || (x_counter == 8'd71) || 
+						   (x_counter >= 8'd75 && x_counter <= 8'd78) ||
+						   (x_counter == 8'd82) || (x_counter == 8'd90) || (x_counter == 8'd95)) begin
+							if(y_counter == 7'd51 && (x_counter == 8'd76 || x_counter == 8'd77))
+								c <= ~colour;
+							else if(y_counter == 7'd52 && (x_counter == 8'd75 || x_counter == 8'd78))
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd53) begin
+						if((x_counter >= 8'd66 && x_counter <= 8'd71) ||
+						   (x_counter == 8'd76) || (x_counter == 8'd77) || 
+						   (x_counter >= 8'd82 && x_counter <= 8'd87) ||
+						   (x_counter == 8'd90) || (x_counter == 8'd95))
+							c <= colour;
 						else
 							c <= ~colour;
 					end

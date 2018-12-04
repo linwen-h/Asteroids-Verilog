@@ -17,9 +17,13 @@ module graphics_datapath_test(
 		VGA_G,	 						//	VGA Green[9:0]
 		VGA_B   						//	VGA Blue[9:0]);
 	);
+	
 	reg [63:0] asteroid_x;
 	reg [55:0] asteroid_y;
 	reg [7:0] draw_asteroid;
+	reg [63:0] bullet_x;
+	reg [55:0] bullet_y;
+	reg [7:0] draw_bullet;
 	wire [7:0] curr_x;
 	wire [6:0] curr_y;
 	wire [7:0] start_x;
@@ -97,17 +101,19 @@ module graphics_datapath_test(
 	always @ (posedge CLOCK_50, negedge resetn)
 		begin
 			if (!resetn) begin
-				asteroid_x[63:16] <= 48'd0;
-				asteroid_y[55:14] <= 42'd0;
-				asteroid_x[15:0] <= 16'b0001101100000001;
-				asteroid_y[13:0] <= 14'b00011110000001;
-				draw_asteroid[7:0] <= 8'b00000011;
-				// asteroid_x[63:0] <= 64'b0001010000010100000101000100111101001111100010111000101110001011;
-				// asteroid_y[55:0] <= 56'b00000000111011111011100000001110111000000001110111110111;
-				// draw_asteroid[7:0] <= 8'b11111111;
-				// asteroid_x[63:0] = 64'd0;
-				// asteroid_y[55:0] = 56'd0;	
-				// draw_asteroid[7:0] = 8'b00000000;
+				// asteroid_x[63:16] <= 48'd0;
+				// asteroid_y[55:14] <= 42'b0;
+				// asteroid_x[15:0] <= 16'b0001101100000001;
+				// asteroid_y[13:0] <= 14'b00011110000001;
+				// draw_asteroid[7:0] <= 8'b00000011;
+				asteroid_x[63:0] <= 64'b0000101000010100000111100010100000110010001111000100011001010000;
+				asteroid_y[55:0] <= 56'b00000000000000000000000000000000000000000000000000000000;
+				draw_asteroid[7:0] <= 8'b11111111;
+				bullet_x[63:8] <= 56'd0;
+				bullet_y[55:7] <= 49'd0;
+				bullet_x[7:0] <= 8'b00000000;
+				bullet_y[6:0] <= 7'b0000000;
+				draw_bullet[7:0] <= 8'b00000000;
 				time_counter <= 24'd12500000; 
 			end
 			else begin
@@ -115,14 +121,34 @@ module graphics_datapath_test(
 				if((time_counter == 24'd0) && SW[9]) begin
 					asteroid_x[7:0] <= asteroid_x[7:0] + 8'd1;
 					asteroid_y[6:0] <= asteroid_y[6:0] + 8'd1;
+					asteroid_x[15:8] <= asteroid_x[15:8] + 8'd1;
+					asteroid_y[13:7] <= asteroid_y[13:7] + 8'd1;
+					asteroid_x[23:16] <= asteroid_x[23:16] + 8'd1;
+					asteroid_y[20:14] <= asteroid_y[20:14] + 8'd1;
+					asteroid_x[31:24] <= asteroid_x[31:24] + 8'd1;
+					asteroid_y[27:21] <= asteroid_y[27:21] + 8'd1;
+					asteroid_x[39:32] <= asteroid_x[39:32] + 8'd1;
+					asteroid_y[34:28] <= asteroid_y[34:28] + 8'd1;
+					asteroid_x[47:40] <= asteroid_x[47:40] + 8'd1;
+					asteroid_y[41:35] <= asteroid_y[41:35] + 8'd1;
+					asteroid_x[55:48] <= asteroid_x[55:48] + 8'd1;
+					asteroid_y[48:42] <= asteroid_y[48:42] + 8'd1;
+					asteroid_x[63:56] <= asteroid_x[63:56] + 8'd1;
+					asteroid_y[55:49] <= asteroid_y[55:49] + 8'd1;
+					bullet_x[7:0] <= bullet_x[7:0] + 8'd1;
+					bullet_y[6:0] <= bullet_y[6:0] + 8'd1;
 				end
 			end
 		end
 	
-	wire enable, done_draw;
-	wire [2:0] calc, state;
-	assign LEDR[2:0] = state;
+	wire enable, done_draw, enter_signal, death;
+	wire [2:0] calc;
+	wire [3:0] state;
+	assign LEDR[3:0] = state;
 	wire [2:0] asteroid_counter;
+	assign enter_signal = ~KEY[1];
+	assign death = ~KEY[2];
+	
 	datapath d(
 		.colour(3'b000),
 		.clock(CLOCK_50),
@@ -132,6 +158,9 @@ module graphics_datapath_test(
 		.asteroid_x(asteroid_x),
 		.asteroid_y(asteroid_y),
 		.draw_asteroid(draw_asteroid),
+		.bullet_x(bullet_x),
+		.bullet_y(bullet_y),
+		.draw_bullet(draw_bullet),
 		.direction(SW[3:0]),
 		.curr_x(x),
 		.curr_y(y),
@@ -149,14 +178,16 @@ module graphics_datapath_test(
 		.plot(writeEn), 
 		.done_draw(done_draw),
 		.calc(calc),
-		.state(state)
+		.state(state),
+		.enter_signal(enter_signal),
+		.death(death)
 	);
 	
 	hex x1(HEX0, asteroid_x[3:0]);
 	hex x2(HEX1, asteroid_x[7:4]);
 	hex y1(HEX2, asteroid_y[3:0]);
 	hex y2(HEX3, {1'b0, asteroid_y[6:4]});
-	hex roid(HEX4, {2'b000, asteroid_counter[2:0]});
+	hex roid(HEX4, {1'b0, asteroid_counter[2:0]});
 endmodule
 
 module datapath(
@@ -168,6 +199,9 @@ module datapath(
 	input [63:0] asteroid_x,
 	input [55:0] asteroid_y,
 	input [7:0] draw_asteroid,
+	input [63:0] bullet_x,
+	input [55:0] bullet_y,
+	input [7:0] draw_bullet,
 	input [3:0] direction,
 	output [7:0] curr_x,
 	output [6:0] curr_y,
@@ -182,21 +216,23 @@ module datapath(
 	reg [7:0] x;
 	reg [6:0] y;
 	reg [0:0] loaded;
-	reg [1:0] prev_calc;
+	reg [2:0] prev_calc;
 	//reg [2:0] asteroid_counter;
+	reg [2:0] bullet_counter;
 	
 	assign start_x = x;
 	assign start_y = y;
 	
 	always @(posedge clock) begin: colour_load
 		if (!resetn) begin
-			x <= 8'b00010100;
+			x <= 8'b00000000;
 			y <= 7'b0000000;
 			c <= colour;
 			done_draw <= 1'b0;
 			loaded <= 1'b0;
 			asteroid_counter <= 3'b000;
-			prev_calc <= 3'b100;
+			bullet_counter <= 3'b000;
+			prev_calc <= 3'b110;
 			x_counter <= 8'd0;
 			y_counter <= 7'd0;
 		end
@@ -205,17 +241,17 @@ module datapath(
 				y_counter <= 7'd0;
 				done_draw <= 1'd0;
 		end
-		else if (enable && calc == 3'b000) begin
+		else if (enable && (calc == 3'b000 || calc == 3'b100 || calc == 3'b101)) begin
 			x_counter <= x_counter + 1;
-			if (x_counter == 8'd120) begin
+			if (x_counter == 8'd160) begin
 				y_counter <= y_counter + 1;
-				if (y_counter == 8'd120) begin
+				if (y_counter == 8'd160) begin
 					y_counter <= 7'd0;
 				end
 				x_counter <= 8'd0;
 			end
 		end
-		else if (enable) begin
+		else if (enable && calc != 3'b011) begin
 			x_counter <= x_counter + 1;
 			if (x_counter == 8'd5) begin
 				y_counter <= y_counter + 1;
@@ -226,15 +262,15 @@ module datapath(
 		end
 		
 		if(loaded == 1'b0) begin
-			if(calc == prev_calc && calc != 3'b010) begin
+			if(calc == prev_calc && calc != 3'b010 && calc != 3'b011) begin
 				done_draw <= 1'b1;
 			end
-			else if (calc == 3'b000) begin
-				x <= 8'b00010100;
+			else if (calc == 3'b000 || calc == 3'b100 || calc == 3'b101) begin
+				x <= 8'b00000000;
 				y <= 7'b0000000;
-				c <= 3'b110;
+				c <= ~colour;
 				loaded <= 1'b1;
-				prev_calc <= 3'b000;
+				prev_calc <= calc;
 			end
 			else if (calc == 3'b001) begin
 				x <= 8'd79;
@@ -294,13 +330,64 @@ module datapath(
 					asteroid_counter <= 3'b000;
 					done_draw <= 1'b1;
 				end
-				
+			end
+			else if (calc == 3'b011) begin
+				prev_calc <= 3'b011;
+				x <= 8'd159;
+				y <= 7'd119;
+				if (draw_bullet[bullet_counter] == 1'b0 && bullet_counter != 3'b111) begin
+					bullet_counter <= bullet_counter == 3'd7 ? 3'd0 : bullet_counter + 3'b001;
+				end
+				else if (bullet_counter == 3'b000 && draw_bullet[0] == 1'b1) begin
+					x <= bullet_x[7:0];
+					y <= bullet_y[6:0];
+					loaded <= 1'b1;
+				end
+				else if (bullet_counter == 3'b001 && draw_bullet[1] == 1'b1) begin
+					x <= bullet_x[15:8];
+					y <= bullet_y[13:7];
+					loaded <= 1'b1;
+				end
+				else if (bullet_counter == 3'b010 && draw_bullet[2] == 1'b1) begin
+					x <= bullet_x[23:16];
+					y <= bullet_y[20:14];
+					loaded <= 1'b1;
+				end
+				else if (bullet_counter == 3'b011 && draw_bullet[3] == 1'b1) begin
+					x <= bullet_x[31:24];
+					y <= bullet_y[27:21];
+					loaded <= 1'b1;
+				end
+				else if (bullet_counter == 3'b100 && draw_bullet[4] == 1'b1) begin
+					x <= bullet_x[39:32];
+					y <= bullet_y[34:28];
+					loaded <= 1'b1;
+				end
+				else if (bullet_counter == 3'b101 && draw_bullet[5] == 1'b1) begin
+					x <= bullet_x[47:40];
+					y <= bullet_y[41:35];
+					loaded <= 1'b1;
+				end
+				else if (bullet_counter == 3'b110 && draw_bullet[6] == 1'b1) begin
+					x <= bullet_x[55:48];
+					y <= bullet_y[48:42];
+					loaded <= 1'b1;
+				end
+				else if (bullet_counter == 3'b111 && draw_bullet[7] == 1'b1) begin
+					x <= bullet_x[63:56];
+					y <= bullet_y[55:49];
+					loaded <= 1'b1;
+				end
+				else begin
+					bullet_counter <= 3'b000;
+					done_draw <= 1'b1;
+				end
 			end
 		end
 		else begin
 			if(calc == 3'b000) begin
-				c <= 3'b110;
-				if (y_counter == 7'd119 && x_counter == 8'd119) begin
+				c <= ~colour;
+				if (y_counter == 7'd119 && x_counter == 8'd159) begin
 					loaded <= 1'b0;
 					done_draw <= 1'b1;
 				end
@@ -397,6 +484,375 @@ module datapath(
 						c <= ~colour;
 				end
 			end
+			else if(calc == 3'b011) begin
+				loaded <= 1'b0;
+				c <= draw_bullet[bullet_counter] == 1'b1 ? colour : ~colour;
+				if (bullet_counter == 3'b111) begin
+					bullet_counter <= 3'b000;
+					done_draw <= 1'b1;
+				end
+				else begin
+					bullet_counter <= bullet_counter + 3'b001;
+				end
+			end
+			else if(calc == 3'b100) begin
+				if (y_counter == 7'd119 && x_counter == 8'd159) begin
+					c <= ~colour;
+					loaded <= 1'b0;
+					done_draw <= 1'b1;
+				end
+				else if(((y_counter >= 7'd18 && y_counter <= 7'd35) || (y_counter >= 7'd77 && y_counter <= 7'd84)) && x_counter >= 8'd19 && x_counter <= 8'd142) begin
+					if(y_counter >= 7'd18 && y_counter <= 7'd20) begin
+						if((x_counter >= 8'd19 && x_counter <= 8'd30) || 
+						   (x_counter >= 8'd33 && x_counter <= 8'd44) || 
+						   (x_counter >= 8'd47 && x_counter <= 8'd58) || 
+						   (x_counter >= 8'd61 && x_counter <= 8'd72) || 
+						   (x_counter >= 8'd75 && x_counter <= 8'd86) || 
+						   (x_counter >= 8'd89 && x_counter <= 8'd100) || 
+						   (x_counter >= 8'd103 && x_counter <= 8'd114) || 
+						   (x_counter >= 8'd117 && x_counter <= 8'd128) || 
+						   (x_counter >= 8'd131 && x_counter <= 8'd142)) begin
+							if(y_counter == 7'd18 && (x_counter == 8'd127 || x_counter == 8'd128) || y_counter == 7'd19 && x_counter == 8'd128)
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if(y_counter >= 7'd21 && y_counter <= 7'd24) begin
+						if((x_counter >= 8'd19 && x_counter <= 8'd21) || 
+						   (x_counter >= 8'd28 && x_counter <= 8'd30) || 
+						   (x_counter >= 8'd33 && x_counter <= 8'd35) || 
+						   (x_counter >= 8'd51 && x_counter <= 8'd54) || 
+						   (x_counter >= 8'd61 && x_counter <= 8'd63) || 
+						   (x_counter >= 8'd75 && x_counter <= 8'd77) || 
+						   (x_counter >= 8'd84 && x_counter <= 8'd86) || 
+						   (x_counter >= 8'd89 && x_counter <= 8'd91) ||
+						   (x_counter >= 8'd98 && x_counter <= 8'd100) ||
+						   (x_counter >= 8'd107 && x_counter <= 8'd110) ||
+						   (x_counter >= 8'd117 && x_counter <= 8'd119) ||
+						   (x_counter >= 8'd126 && x_counter <= 8'd128) ||
+						   (x_counter >= 8'd131 && x_counter <= 8'd133))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter >= 7'd25 && y_counter <= 7'd28) begin
+						if((x_counter >= 8'd19 && x_counter <= 8'd30) || 
+						   (x_counter >= 8'd33 && x_counter <= 8'd44) || 
+						   (x_counter >= 8'd51 && x_counter <= 8'd54) ||
+						   (x_counter >= 8'd61 && x_counter <= 8'd72) || 
+						   (x_counter >= 8'd75 && x_counter <= 8'd85) ||
+						   (x_counter >= 8'd89 && x_counter <= 8'd91) ||
+						   (x_counter >= 8'd98 && x_counter <= 8'd100) ||
+						   (x_counter >= 8'd107 && x_counter <= 8'd110) ||
+						   (x_counter >= 8'd117 && x_counter <= 8'd119) ||
+						   (x_counter >= 8'd126 && x_counter <= 8'd128) ||
+						   (x_counter >= 8'd131 && x_counter <= 8'd142)) begin
+							if((y_counter == 7'd26 || y_counter == 7'd27) && x_counter == 8'd85)
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if(y_counter >= 7'd29 && y_counter <= 7'd32) begin
+						if((x_counter >= 8'd19 && x_counter <= 8'd21) || 
+						   (x_counter >= 8'd28 && x_counter <= 8'd30) || 
+						   (x_counter >= 8'd42 && x_counter <= 8'd44) || 
+						   (x_counter >= 8'd51 && x_counter <= 8'd54) || 
+						   (x_counter >= 8'd61 && x_counter <= 8'd63) || 
+						   (x_counter >= 8'd75 && x_counter <= 8'd77) || 
+						   (x_counter >= 8'd84 && x_counter <= 8'd86) || 
+						   (x_counter >= 8'd89 && x_counter <= 8'd91) || 
+						   (x_counter >= 8'd98 && x_counter <= 8'd100) ||
+						   (x_counter >= 8'd107 && x_counter <= 8'd110) ||
+						   (x_counter >= 8'd117 && x_counter <= 8'd119) ||
+						   (x_counter >= 8'd126 && x_counter <= 8'd128) ||
+						   (x_counter >= 8'd140 && x_counter <= 8'd142))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter >= 7'd33 && y_counter <= 7'd35) begin
+						if((x_counter >= 8'd19 && x_counter <= 8'd21) || 
+						   (x_counter >= 8'd28 && x_counter <= 8'd30) || 
+						   (x_counter >= 8'd33 && x_counter <= 8'd44) || 
+						   (x_counter >= 8'd51 && x_counter <= 8'd54) || 
+						   (x_counter >= 8'd61 && x_counter <= 8'd72) || 
+						   (x_counter >= 8'd75 && x_counter <= 8'd77) || 
+						   (x_counter >= 8'd84 && x_counter <= 8'd86) || 
+						   (x_counter >= 8'd89 && x_counter <= 8'd100) || 
+						   (x_counter >= 8'd103 && x_counter <= 8'd114) || 
+						   (x_counter >= 8'd117 && x_counter <= 8'd128) || 
+						   (x_counter >= 8'd131 && x_counter <= 8'd142)) begin
+							if(y_counter == 7'd35 && (x_counter == 8'd127 || x_counter == 8'd128) || y_counter == 7'd34 && x_counter == 8'd128)
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if(y_counter == 7'd77) begin
+						if((x_counter >= 8'd38 && x_counter <= 8'd43) || 
+						   (x_counter >= 8'd46 && x_counter <= 8'd50) || 
+						   (x_counter >= 8'd54 && x_counter <= 8'd59) || 
+						   (x_counter >= 8'd62 && x_counter <= 8'd67) || 
+						   (x_counter >= 8'd70 && x_counter <= 8'd75) || 
+						   (x_counter >= 8'd86 && x_counter <= 8'd91) || 
+						   (x_counter >= 8'd94 && x_counter <= 8'd99) || 
+						   (x_counter >= 8'd102 && x_counter <= 8'd107) || 
+						   (x_counter >= 8'd110 && x_counter <= 8'd115) || 
+						   (x_counter >= 8'd118 && x_counter <= 8'd122))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter == 7'd78 || y_counter == 7'd79) begin
+						if((x_counter == 8'd38) || (x_counter == 8'd43) || (x_counter == 8'd46) || 
+						   (x_counter == 8'd51) || (x_counter == 8'd54) || (x_counter == 8'd62) || 
+						   (x_counter == 8'd70) || (x_counter == 8'd86) || (x_counter == 8'd94) || 
+						   (x_counter == 8'd99) || (x_counter == 8'd104) || (x_counter == 8'd105) ||
+						   (x_counter == 8'd110) || (x_counter == 8'd118) || (x_counter == 8'd123))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter == 7'd80 || y_counter == 7'd81) begin
+						if((x_counter >= 8'd38 && x_counter <= 8'd43) || 
+						   (x_counter >= 8'd46 && x_counter <= 8'd51) || 
+						   (x_counter >= 8'd54 && x_counter <= 8'd59) || 
+						   (x_counter >= 8'd62 && x_counter <= 8'd67) || 
+						   (x_counter >= 8'd70 && x_counter <= 8'd75) || 
+						   (x_counter >= 8'd86 && x_counter <= 8'd91) || 
+						   (x_counter == 8'd94) || (x_counter == 8'd99) || (x_counter == 8'd104) || 
+						   (x_counter == 8'd105) || (x_counter >= 8'd110 && x_counter <= 8'd115) || 
+						   (x_counter >= 8'd118 && x_counter <= 8'd123)) begin
+							if(y_counter == 7'd81 && (x_counter == 8'd51 || x_counter == 8'd123))
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if(y_counter == 7'd82 || y_counter == 7'd83) begin
+						if((x_counter == 8'd38) || (x_counter == 8'd46) || (x_counter == 8'd51) ||
+						   (x_counter == 8'd54) || (x_counter == 8'd67) || (x_counter == 8'd75) || 
+						   (x_counter == 8'd86) || (x_counter == 8'd94) || (x_counter == 8'd99) || 
+						   (x_counter == 8'd104) || (x_counter == 8'd105) || (x_counter == 8'd110) ||
+						   (x_counter == 8'd118) || (x_counter == 8'd123))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter == 7'd84) begin
+						if((x_counter == 8'd38) || (x_counter == 8'd46) || (x_counter == 8'd51) ||
+						   (x_counter >= 8'd54 && x_counter <= 8'd59) || 
+						   (x_counter >= 8'd62 && x_counter <= 8'd67) || 
+						   (x_counter >= 8'd70 && x_counter <= 8'd75) || 
+						   (x_counter >= 8'd86 && x_counter <= 8'd91) || (x_counter == 8'd94) || 
+						   (x_counter == 8'd99) || (x_counter == 8'd104) || (x_counter == 8'd105) ||
+						   (x_counter >= 8'd110 && x_counter <= 8'd115) || (x_counter == 8'd118) || 
+						   (x_counter == 8'd123))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else
+						c <= ~colour;
+				end
+				else 
+					c <= ~colour;
+			end
+			else if(calc == 3'b101) begin
+				if (y_counter == 7'd119 && x_counter == 8'd159) begin
+					c <= ~colour;
+					loaded <= 1'b0;
+					done_draw <= 1'b1;
+				end
+				else if(((y_counter >= 7'd36 && y_counter <= 7'd53) || (y_counter >= 7'd77 && y_counter <= 7'd84)) && x_counter >= 8'd38 && x_counter <= 8'd123) begin
+					if(y_counter == 7'd36) begin
+						if((x_counter >= 8'd66 && x_counter <= 8'd71) || 
+						   (x_counter >= 8'd74 && x_counter <= 8'd79) || 
+						   (x_counter == 8'd82) || (x_counter == 8'd87) || 
+						   (x_counter >= 8'd90 && x_counter <= 8'd95))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter >= 7'd37 && y_counter <= 7'd39) begin
+						if((x_counter == 8'd66) || (x_counter == 8'd74) || (x_counter == 8'd79) || 
+						   (x_counter >= 8'd82 && x_counter <= 8'd87) || 
+						   (x_counter >= 8'd90 && x_counter <= 8'd95)) begin
+							if((y_counter == 7'd37 || y_counter == 7'd38) && 
+							   (x_counter == 8'd84 || x_counter == 8'd85 || 
+							   (x_counter >= 8'd91 && x_counter <= 8'd95)))
+								c <= ~colour;
+							else if(y_counter == 7'd39 && (x_counter == 8'd83 || x_counter == 8'd86))
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd40) begin
+						if((x_counter >= 8'd66 && x_counter <= 8'd71) || 
+						   (x_counter >= 8'd74 && x_counter <= 8'd79) ||
+						   (x_counter >= 8'd82 && x_counter <= 8'd87) || 
+						   (x_counter >= 8'd90 && x_counter <= 8'd95)) begin
+							if(x_counter == 8'd67 || x_counter == 8'd68 || x_counter == 8'd83 || x_counter == 8'd86)
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd41 || y_counter == 7'd42) begin
+						if((x_counter == 8'd66) || (x_counter == 8'd71) || (x_counter == 8'd74) || 
+						   (x_counter == 8'd79) || (x_counter == 8'd82) || (x_counter == 8'd87) ||
+						   (x_counter == 8'd90))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd43) begin
+						if((x_counter >= 8'd66 && x_counter <= 8'd71) ||
+						   (x_counter == 8'd74) || (x_counter == 8'd79) || (x_counter == 8'd82) ||
+						   (x_counter == 8'd87) || (x_counter >= 8'd90 && x_counter <= 8'd95))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd46) begin
+						if((x_counter >= 8'd66 && x_counter <= 8'd71) ||
+						   (x_counter == 8'd74) || (x_counter == 8'd79) || 
+						   (x_counter >= 8'd82 && x_counter <= 8'd87) || 
+						   (x_counter >= 8'd90 && x_counter <= 8'd94))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd47 || y_counter == 7'd48) begin
+						if((x_counter == 8'd66) || (x_counter == 8'd71) || (x_counter == 8'd74) || 
+						   (x_counter == 8'd79) || (x_counter == 8'd82) || (x_counter == 8'd90) ||
+						   (x_counter == 8'd95))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd49 || y_counter == 7'd50) begin
+						if((x_counter == 8'd66) || (x_counter == 8'd71) || (x_counter == 8'd75) || 
+						   (x_counter == 8'd78) || (x_counter >= 8'd82 && x_counter <= 8'd87) ||
+						   (x_counter >= 8'd90 && x_counter <= 8'd95)) begin
+							if(y_counter == 7'd50 && x_counter == 8'd95)
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd51 || y_counter == 7'd52) begin
+						if((x_counter == 8'd66) || (x_counter == 8'd71) || 
+						   (x_counter >= 8'd75 && x_counter <= 8'd78) ||
+						   (x_counter == 8'd82) || (x_counter == 8'd90) || (x_counter == 8'd95)) begin
+							if(y_counter == 7'd51 && (x_counter == 8'd76 || x_counter == 8'd77))
+								c <= ~colour;
+							else if(y_counter == 7'd52 && (x_counter == 8'd75 || x_counter == 8'd78))
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if (y_counter == 7'd53) begin
+						if((x_counter >= 8'd66 && x_counter <= 8'd71) ||
+						   (x_counter == 8'd76) || (x_counter == 8'd77) || 
+						   (x_counter >= 8'd82 && x_counter <= 8'd87) ||
+						   (x_counter == 8'd90) || (x_counter == 8'd95))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter == 7'd77) begin
+						if((x_counter >= 8'd38 && x_counter <= 8'd43) || 
+						   (x_counter >= 8'd46 && x_counter <= 8'd50) || 
+						   (x_counter >= 8'd54 && x_counter <= 8'd59) || 
+						   (x_counter >= 8'd62 && x_counter <= 8'd67) || 
+						   (x_counter >= 8'd70 && x_counter <= 8'd75) || 
+						   (x_counter >= 8'd86 && x_counter <= 8'd91) || 
+						   (x_counter >= 8'd94 && x_counter <= 8'd99) || 
+						   (x_counter >= 8'd102 && x_counter <= 8'd107) || 
+						   (x_counter >= 8'd110 && x_counter <= 8'd115) || 
+						   (x_counter >= 8'd118 && x_counter <= 8'd122))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter == 7'd78 || y_counter == 7'd79) begin
+						if((x_counter == 8'd38) || (x_counter == 8'd43) || (x_counter == 8'd46) || 
+						   (x_counter == 8'd51) || (x_counter == 8'd54) || (x_counter == 8'd62) || 
+						   (x_counter == 8'd70) || (x_counter == 8'd86) || (x_counter == 8'd94) || 
+						   (x_counter == 8'd99) || (x_counter == 8'd104) || (x_counter == 8'd105) ||
+						   (x_counter == 8'd110) || (x_counter == 8'd118) || (x_counter == 8'd123))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter == 7'd80 || y_counter == 7'd81) begin
+						if((x_counter >= 8'd38 && x_counter <= 8'd43) || 
+						   (x_counter >= 8'd46 && x_counter <= 8'd51) || 
+						   (x_counter >= 8'd54 && x_counter <= 8'd59) || 
+						   (x_counter >= 8'd62 && x_counter <= 8'd67) || 
+						   (x_counter >= 8'd70 && x_counter <= 8'd75) || 
+						   (x_counter >= 8'd86 && x_counter <= 8'd91) || 
+						   (x_counter == 8'd94) || (x_counter == 8'd99) || (x_counter == 8'd104) || 
+						   (x_counter == 8'd105) || (x_counter >= 8'd110 && x_counter <= 8'd115) || 
+						   (x_counter >= 8'd118 && x_counter <= 8'd123)) begin
+							if(y_counter == 7'd81 && (x_counter == 8'd51 || x_counter == 8'd123))
+								c <= ~colour;
+							else
+								c <= colour;
+						end
+						else
+							c <= ~colour;
+					end
+					else if(y_counter == 7'd82 || y_counter == 7'd83) begin
+						if((x_counter == 8'd38) || (x_counter == 8'd46) || (x_counter == 8'd51) ||
+						   (x_counter == 8'd54) || (x_counter == 8'd67) || (x_counter == 8'd75) || 
+						   (x_counter == 8'd86) || (x_counter == 8'd94) || (x_counter == 8'd99) || 
+						   (x_counter == 8'd104) || (x_counter == 8'd105) || (x_counter == 8'd110) ||
+						   (x_counter == 8'd118) || (x_counter == 8'd123))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else if(y_counter == 7'd84) begin
+						if((x_counter == 8'd38) || (x_counter == 8'd46) || (x_counter == 8'd51) ||
+						   (x_counter >= 8'd54 && x_counter <= 8'd59) || 
+						   (x_counter >= 8'd62 && x_counter <= 8'd67) || 
+						   (x_counter >= 8'd70 && x_counter <= 8'd75) || 
+						   (x_counter >= 8'd86 && x_counter <= 8'd91) || (x_counter == 8'd94) || 
+						   (x_counter == 8'd99) || (x_counter == 8'd104) || (x_counter == 8'd105) ||
+						   (x_counter >= 8'd110 && x_counter <= 8'd115) || (x_counter == 8'd118) || 
+						   (x_counter == 8'd123))
+							c <= colour;
+						else
+							c <= ~colour;
+					end
+					else
+						c <= ~colour;
+				end
+				else 
+					c <= ~colour;
+			end
 		end
 	end
 	
@@ -404,32 +860,41 @@ module datapath(
 	assign curr_y = y + y_counter;
 endmodule
 
-module control(clk, resetn, enable, plot, done_draw, calc, state);
-	input clk, resetn, done_draw;
-	output [2:0] state;
+module control(clk, resetn, enable, plot, done_draw, calc, state, enter_signal, death);
+	input clk, resetn, done_draw, enter_signal, death;
+	output [3:0] state;
 	output reg plot, enable;
-	output reg [1:0] calc;
-	reg [2:0] current_state, next_state;
+	output reg [2:0] calc;
+	reg [3:0] current_state, next_state;
 	reg [25:0] counter;
 	reg go;
-	assign state = current_state == 3'b000 ? 3'b111: current_state;
+	assign state = current_state;
 
-	localparam		ERASE = 3'b000,
-				CALC_SHIP = 3'b001,
-				CALC_ASTEROID = 3'b010,
-				CALC_BULLET = 3'b011,
-				IDLE = 3'b100,
-				ERASE_DELAY = 3'b101;
+	localparam	MENU = 4'b0000,
+				MENU_WAIT = 4'b0001,
+				ERASE = 4'b0010,
+				CHECK_DEATH = 4'b0011,
+				CALC_SHIP = 4'b0100,
+				CALC_ASTEROID = 4'b0101,
+				CALC_BULLET = 4'b0110,
+				IDLE = 4'b0111,
+				GAME_OVER = 4'b1000,
+				GAME_OVER_WAIT = 4'b1001;
 	
 	always @ (*)
 		begin: state_table
 			case(current_state)
-				ERASE: next_state = done_draw && go ? CALC_SHIP : ERASE;
-				ERASE_DELAY: next_state = go ? CALC_SHIP: ERASE_DELAY;
+				MENU: next_state = done_draw && go ? MENU_WAIT : MENU;
+				MENU_WAIT: next_state = enter_signal && go ? ERASE : MENU_WAIT;
+				ERASE: next_state = done_draw && go ? CHECK_DEATH : ERASE;
+				CHECK_DEATH: next_state = death ? GAME_OVER : CALC_SHIP;
 				CALC_SHIP: next_state = done_draw && go ? CALC_ASTEROID : CALC_SHIP;
-				CALC_ASTEROID: next_state = done_draw && go ? IDLE : CALC_ASTEROID; //TODO: Add CALC_BULLET
+				CALC_ASTEROID: next_state = done_draw && go ? CALC_BULLET : CALC_ASTEROID; 
+				CALC_BULLET: next_state = done_draw && go ? IDLE : CALC_BULLET;
 				IDLE: next_state = go ? ERASE : IDLE;
-			default: next_state = ERASE;
+				GAME_OVER: next_state = done_draw && go ? GAME_OVER_WAIT: GAME_OVER;
+				GAME_OVER_WAIT: next_state = enter_signal && go ? MENU : GAME_OVER_WAIT;
+			default: next_state = MENU;
 			endcase
 		end
 
@@ -437,34 +902,51 @@ module control(clk, resetn, enable, plot, done_draw, calc, state);
 		begin: enable_signals
 		enable = 1'b0;
 		plot = 1'b1;
-		calc = 3'b100;
+		calc = 3'b110;
 		case (current_state)
+			MENU: begin
+				enable = 1'b1;
+				calc = 3'b100;
+			end
+			MENU_WAIT: begin
+				plot = 1'b0;
+			end
 			ERASE: begin
 				enable = 1'b1;
 				calc = 3'b000;
 			end
+			CHECK_DEATH: begin
+				plot = 1'b0;
+			end
 			CALC_SHIP: begin
 				enable = 1'b1;
 				calc = 3'b001;
-			end
+				end
 			CALC_ASTEROID: begin
 				enable = 1'b1;
 				calc = 3'b010;
-				end
+			end
 			CALC_BULLET: begin
 				enable = 1'b1;
 				calc = 3'b011;
-				end
+			end
 			IDLE: begin
 				plot = 1'b0;
-				end
+			end
+			GAME_OVER: begin
+				enable = 1'b1;
+				calc = 3'b101;
+			end
+			GAME_OVER_WAIT: begin
+				plot = 1'b0;
+			end
 			endcase
 		end
 
 	always @ (posedge clk)
 		begin: state_FFS
 		if(!resetn)
-			current_state <= ERASE;
+			current_state <= MENU;
 		else
 			current_state <= next_state;
 		end
@@ -472,38 +954,29 @@ module control(clk, resetn, enable, plot, done_draw, calc, state);
 	always @ (posedge clk)
 		begin: FPS_counter
 			if(!resetn) begin
-				counter <= 26'd19999;
+				counter <= 26'd21999;
 			end
 			else begin
 				counter <= counter - 26'd1;
 				if(counter == 26'd0) begin
 					if (current_state == ERASE) begin
-						counter <= 26'd99;
+						counter <= 26'd100;
 					end
 					else if(current_state == CALC_SHIP) begin
-						counter <= 26'd1999;
+						counter <= 26'd225;
 					end
 					else if(current_state == CALC_ASTEROID) begin
-						counter <= 26'd899999;
+						counter <= 26'd50;
+					end
+					else if(current_state == CALC_BULLET) begin
+						counter <= 26'd833334;
+					end
+					else if(current_state == MENU || current_state == GAME_OVER) begin
+						counter <= 26'd12500000;
 					end
 					else begin
-						counter <= 26'd19999;
+						counter <= 26'd21999;
 					end
-					// if (current_state == ERASE) begin
-						// counter <= 26'd49999999;
-					// end
-					// else if(current_state == ERASE_DELAY) begin
-						// counter <= 26'd99;
-					// end
-					// else if(current_state == CALC_SHIP) begin
-						// counter <= 26'd1999;
-					// end
-					// else if(current_state == CALC_ASTEROID) begin
-						// counter <= 26'd899999;
-					// end
-					// else begin
-						// counter <= 26'd19999;
-					// end
 					go <= 1'b1;
 				end
 				else 
