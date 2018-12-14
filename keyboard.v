@@ -12,7 +12,9 @@ module keyboard(
 	output reg forward,
 	output reg backward,
 	output reg right_rotate,
-	output reg left_rotate
+	output reg left_rotate,
+	output reg enter,
+	output reg s_reset
 	//output [9:0] LEDR
 	);
 	
@@ -81,12 +83,15 @@ module keyboard(
 				backward <= 1'b0;
 				left_rotate <= 1'b0;
 				right_rotate  <= 1'b0;
+				enter <= 1'b0;
+				s_reset <=1'b0;
 			end
 			else begin
 				shoot <= space_pulse;
+				enter <= enter_pulse;
+				s_reset <= s_pulse;
 				if (controller_type) begin
 					forward <= w_pulse;
-					backward <= s_pulse;
 					right_rotate <= d_pulse;
 					left_rotate <= a_pulse;
 				end

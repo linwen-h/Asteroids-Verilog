@@ -7,6 +7,7 @@ module ship_controller (
 	output [9:0] LEDR, //[7:4] direction, [3:0] past_direction
 	output [6:0] HEX0, //curr_x [3:0]
 	output [6:0] HEX1, //curr_x [7:4]
+	output [6:0] HEX2,
 	output [6:0] HEX3, //curr_y [3:0]
 	output [6:0] HEX4,  //curr_y [0] + [6:4]
 	//output reg [3:0] direction
@@ -23,21 +24,25 @@ module ship_controller (
 	
 	wire clk;
 	assign clk = CLOCK_50;
-	wire lives;
-	assign lives = SW[2:1];
+	reg [2:0] lives;
 	
 
 	//assign LEDR [8:5] = direction;
 	//assign LEDR [3:0] = past_direction;
+<<<<<<< HEAD
+	assign LEDR[8] = shoot;
+=======
 	//assign LEDR[9] = shoot;
+>>>>>>> upstream/master
 	
-	hex_seg(HEX0, curr_x[3:0]);
-	hex_seg(HEX1, curr_x[7:4]);
-	hex_seg(HEX3, curr_y[3:0]);
-	hex_seg(HEX4, {1'b0, curr_y[6:4]});
+//	hex_seg(HEX0, curr_x[3:0]);
+//	hex_seg(HEX1, curr_x[7:4]);
+//	hex_seg(HEX3, curr_y[3:0]);
+//	hex_seg(HEX4, {1'b0, curr_y[6:4]});
 	
 
-	wire shoot, rotate_right, rotate_left, plot_ship;
+	wire shoot, rotate_right, rotate_left, plot_ship, enter, s_key, keyboard_reset;
+	wire gameover;
 	reg [3:0] direction;
 	wire [7:0] curr_x;
 	wire [6:0] curr_y;
@@ -48,7 +53,13 @@ module ship_controller (
 	wire move;
 	
 	wire reset;
+<<<<<<< HEAD
+	assign reset = s_key;
+	assign keyboard_reset = SW[0];
+	
+=======
 	assign reset = SW[0];
+>>>>>>> upstream/master
 	
 	wire [23:0] game_clock;
 	wire clock_pulse;
@@ -64,7 +75,9 @@ module ship_controller (
 		.shoot(shoot),
 		.forward(move),
 		.right_rotate(rotate_right),
-		.left_rotate(rotate_left)
+		.left_rotate(rotate_left),
+		.enter(enter),
+		.s_reset(s_key)
 		);
 
 	spaceship ship(
@@ -90,6 +103,7 @@ module ship_controller (
 				counter <= 24'd12500000; //TODO: change this time (1/4 second)
 				//move <= 1'b0;
 				direction <= 4'b0001;
+				lives <= 4'b0111;
 					
 			end
 			else begin
@@ -136,8 +150,13 @@ module ship_controller (
 	wire [55:0] asteroid_y_coords;
 	wire [7:0] asteroid_collisions;
 	
+<<<<<<< HEAD
+//	assign LEDR[0] = clock_pulse;
+//	assign LEDR[9:1] = moving_asteroids;
+=======
 	assign LEDR[0] = clock_pulse;
 	assign LEDR[9:1] = moving_asteroids;
+>>>>>>> upstream/master
 	
 	asteroid_generator generator(
 					.game_clk(clk),
@@ -145,8 +164,37 @@ module ship_controller (
 					.moving_block(moving_asteroids),
 					.x_coords(asteroid_x_coords),
     				.y_coords(asteroid_y_coords),
+<<<<<<< HEAD
+					.spaceship_collisions(asteroid_collisions),
+					.gameover(gameover),
+					.LEDR(LEDR[5:0])
+					);
+	
+	wire [7:0] plot_bullets;
+	wire [63:0] bullet_x;
+	wire [55:0] bullet_y;
+	wire [7:0] bullets_moving;
+	wire [7:0] asteroid_hit;
+	
+	bullet_generator bg(
+					.clk(clk),
+					.reset(reset), 
+					.shooting(shoot),
+					.direction_x(direction[3:2]),
+					.direction_y(direction[1:0]),
+					.asteroid_x(asteroid_x_coords),
+					.asteroid_y(asteroid_y_coords),
+					.bullets_moving(bullets_moving),
+					.bullet_x_coord(bullet_x),
+					.bullet_y_coord(bullet_y),
+					.asteroid_hit(asteroid_hit),
+					.plot_bullet(plot_bullets)
+
+    );
+=======
 					.spaceship_collisions(asteroid_collisions)
 					);
+>>>>>>> upstream/master
 
     //output [9:0] LEDR //[7:4] direction, [3:0] past_direction
 	  //output [6:0] HEX0, //curr_x [3:0]
@@ -154,6 +202,15 @@ module ship_controller (
 	  //output [6:0] HEX3, //curr_y [3:0]
 	  //output [6:0] HEX4  //curr_y [0] + [6:4]
     
+<<<<<<< HEAD
+	score scoreboard( .clk(clk), .reset(reset), .hit(SW[1]),
+						.HEX0(HEX0),
+						.HEX1(HEX1),
+						.HEX2(HEX2), 
+						.HEX3(HEX3) 
+	);
+=======
+>>>>>>> upstream/master
 	
 	//this module generates the graphics
 	graphics graphics_module(
@@ -162,7 +219,16 @@ module ship_controller (
 				.asteroid_x(asteroid_x_coords), 
 				.asteroid_y(asteroid_y_coords), 
 				.draw_asteroid(moving_asteroids),
+<<<<<<< HEAD
+				.ship_direction(direction),
+				.draw_bullet(bullets_moving),
+				.bullet_x(bullet_x),
+				.bullet_y(bullet_y),
+				.enter_signal(enter),
+				.death(gameover),
+=======
 				.ship_direction(direction), 
+>>>>>>> upstream/master
 				.VGA_CLK(VGA_CLK), 
 				.VGA_HS(VGA_HS),						
 				.VGA_VS(VGA_VS),

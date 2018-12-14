@@ -892,7 +892,11 @@ module control(clk, resetn, enable, plot, done_draw, calc, enter_signal, death);
 						counter <= 26'd50;
 					end
 					else if(current_state == CALC_BULLET) begin
+<<<<<<< HEAD
+						counter <= done_draw ? 26'd833334 : 26'd50;
+=======
 						counter <= 26'd833334;
+>>>>>>> upstream/master
 					end
 					else if(current_state == MENU || current_state == GAME_OVER) begin
 						counter <= 26'd12500000;
